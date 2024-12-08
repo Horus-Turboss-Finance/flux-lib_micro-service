@@ -5,7 +5,7 @@ const walletSchema = new Schema({
   tag : {
     type: String,
     validate :{
-      validator : (str : any) => utils.stringContraint(str, 0, 50),
+      validator : (str : any) => utils.stringContraint(str, 0, 51),
       message : "Un tag ne peut faire plus de 50 caractère."
     }
   },
@@ -31,14 +31,14 @@ const walletSchema = new Schema({
     required : [true, "Le type de compte est requis."],
     validate : {
       validator : (number : any) => {
-        return utils.intContraint(number, 1, 9)
+        return utils.intContraint(number, 0, 10)
       } ,
       message : "Le type de compte doit être compris entre 1 et 9"
     }
   },
   auth : {
     type : String,
-    required : [true, "L'identifiant utilisateur est necessaire"],
+    required : [true, "Connexion nécessaire"],
     validate : {
       validator : (string :any) => {
         return utils.isValidMongooseId(string)

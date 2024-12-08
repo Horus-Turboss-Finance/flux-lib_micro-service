@@ -5,9 +5,10 @@ let { noNegativeNumberContraint } = utils
 
 const budgetSchema = new Schema({
   categorie : {
+    required : [true, "La catégorie du budget est requis"],
     type: Schema.Types.ObjectId,
     ref : "categorie",
-    required : [true, "La catégorie du budget est requis"]
+    unique : true,
   },
   montant : {
     type : Number,
@@ -56,7 +57,7 @@ const budgetSchema = new Schema({
       message : "Le format de l'identifiant est invalide"
     },
     index : true,
-    required : [true, "L'identifiant utilisateur est necessaire"],
+    required : [true, "Connexion nécessaire"],
   }  
 },{
   collection : "budget"

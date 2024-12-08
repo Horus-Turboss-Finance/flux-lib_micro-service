@@ -9,9 +9,7 @@ export const GetBudgetById = catchSync(async (req : any) => {
   let { id } = req.params ?? 0
 
   if(!utils.isValidMongooseId(id)) throw new ResponseException("Invalide id").BadRequest();
-
   let budget = await BudgetSchema.findById(id)
-
   if(!budget) throw new ResponseException("Aucun budget trouvé").NotFound()
 
   /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
@@ -24,19 +22,24 @@ export const GetBudgetById = catchSync(async (req : any) => {
 export const GetBudgetByDate = catchSync(async (req : any) => {
   let { month, year } = req.params ?? 0;
 
+  if(month) month = Math.floor(month);
+  if(year) year = Math.floor(year);
+  
   if(month && !intCheck(month)) throw new ResponseException("Le mois est un nombre").BadRequest();
   if(year && !intCheck(year)) throw new ResponseException("L'année est un nombre").BadRequest();
 
-  let dateStart = new Date(year, month).getTime()
-  let dateEnd = new Date(year, month + 1).getTime()
+  let dateStart = new Date(year, month - 1).getTime()
+  let dateEnd = new Date(year, month).getTime()
 
   const budgets = await BudgetSchema.find({
     $and : [
       { auth : req.userID},
-      { date : { $gt : dateEnd}},
-      { date : { $lte : dateStart}}
+      { date : { $lt : dateEnd}},
+      { date : { $gte : dateStart}}
     ]
   })
+
+  if(!budgets[0]) throw new ResponseException("Aucun budget trouvé").NotFound();
 
   let Responses = JSON.stringify(budgets.map((b : any) => BudgetNormalizer(b)))
   throw new ResponseException(Responses).Success();
@@ -57,13 +60,12 @@ export const GetAllUserBudget = catchSync(async (req : any) => {
 })
 
 export const CreateBudget = catchSync(async (req : any) => {
-  let { categorie, montant, date, devise } = req.body ?? 0;
+  let { categorie, montant, date, devise } = req.body;
 
   if(!isValidMongooseId(categorie)) throw new ResponseException("L'id de la catégorie n'est pas valide").BadRequest();
   if(date && dateCheck(date)) date = new Date(date).getTime();
 
   let resultCategorie = await CategorieSchema.findById(categorie)
-
   if(!resultCategorie) throw new ResponseException("La catégorie n'éxiste pas").NotFound();
 
   /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
@@ -86,8 +88,12 @@ export const CreateBudget = catchSync(async (req : any) => {
     let Responses = JSON.stringify(BudgetNormalizer(budget))
     throw new ResponseException(Responses).OK();
   }catch(e : any){
-    if(!e.name || e.name !== "ValidationError") throw e;
-      
+    if(!e.name || (e.name !== "ValidationError" && e.name !== "MongoServerError")) throw e;
+    
+    if(e.name === 'MongoServerError' && e.code === 11000) {
+     throw new ResponseException("Catégorie déjà utilisé pour un autre budget").BadRequest()
+    }
+
     if(e.errors.auth){
       throw new ResponseException(mongooseMessageErrorFormator(e.errors.auth.message, e.errors.auth.value, "Auth", "id"))
       .BadRequest();
@@ -111,7 +117,7 @@ export const CreateBudget = catchSync(async (req : any) => {
 })
 
 export const CreateTransactionBudget = catchSync(async (req : any) => {
-  let { date, montant, from, to } = req.body;
+  let { montant, from, to } = req.body;
 
   if(!isValidMongooseId(from) || !isValidMongooseId(to)) throw new ResponseException("L'id du budget dans les paramètres from ou to est invalide").BadRequest();
 
@@ -126,38 +132,29 @@ export const CreateTransactionBudget = catchSync(async (req : any) => {
   /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
   if(fromBudData.auth !== req.userID || toBudData.auth !== req.userID) throw new ResponseException("Vous n'êtes pas autorisé à enregistrer ces informations").Forbidden();
 
-  if(date && !dateCheck(date)) throw new ResponseException("La date est invalide").BadRequest();
-
-
-  /* TODO : à tester car pas sur que ça réussisse sans crash */
-  let Response = JSON.stringify([fromBudData, toBudData].map((v: any)=> BudgetNormalizer(v)))
-  
   if(!fromBudData.history[0]) fromBudData.history = [];
   fromBudData.history.push({
     montant,
     from,
-    date,
     to
   });
-
-  let errfrom = fromBudData.validate()
 
   if(!toBudData.history[0]) toBudData.history = [];
   toBudData.history.push({
     montant,
     from,
-    date,
     to
   });
 
-  let errto = toBudData.validate()
+  /* TODO : à tester car pas sur que ça réussisse sans crash */
+  let Response = JSON.stringify([BudgetNormalizer(fromBudData), BudgetNormalizer(toBudData)])
 
   try{
-    let resultfrom = await errfrom;
-    let resultto = await errto;
+    let errfrom = fromBudData.validateSync()
+    let errto = toBudData.validateSync()
 
-    if(resultfrom) throw resultfrom;
-    if(resultto) throw resultto;
+    if(errfrom) throw errfrom;
+    if(errto) throw errto;
 
     await toBudData.save()
     await fromBudData.save()
@@ -171,6 +168,7 @@ export const CreateTransactionBudget = catchSync(async (req : any) => {
 export const UpdateBudget = catchSync(async (req : any) => {
   let { montant, devise, id } = req.body ?? 0;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalide ID budget").BadRequest();
   let budget = await BudgetSchema.findById(id);
   if(!budget) throw new ResponseException("L'identifiant est invalide").NotFound();
 
@@ -204,6 +202,7 @@ export const UpdateBudget = catchSync(async (req : any) => {
 export const DeleteBudget = catchSync(async (req : any) => {
   let { id } = req.body;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid ID budget").BadRequest()
   let budget = await BudgetSchema.findById(id)
   if(!budget) throw new ResponseException("Aucun budget trouvé").NotFound();
 
@@ -218,11 +217,18 @@ const BudgetNormalizer = (budgetData : any) => {
   let { categorie, montant, date, devise, history, _id } = budgetData
 
   if(history[0]){
-    history = history.map((obj : any) => obj.date = new Date(obj.date))
+    history = history.map((obj : any) => {
+      return {
+        to : obj.to,
+        id : obj._id,
+        from : obj.from,
+        montant : obj.montant
+      }
+    })
   }
 
   return {
-    dateDate : new Timepiece("fr", date).longDateTime(),
+    fullDate : new Timepiece("fr", date).monthOnly(),
     history : history ?? [],
     dateTime : date,
     categorie,

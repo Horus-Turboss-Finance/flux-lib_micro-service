@@ -21,8 +21,8 @@ const TransactionRoute = express.Router();
 router.use('/', TransactionRoute);
 
 TransactionRoute.route('/')
-.put(CreateTransaction)
-.post(UpdateTransaction)
+.put(UpdateTransaction)
+.post(CreateTransaction)
 .delete(DeleteTransaction);
 
 TransactionRoute.route("/find/all")

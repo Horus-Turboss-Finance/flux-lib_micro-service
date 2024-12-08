@@ -22,7 +22,7 @@ const main = async () => {
   try{
     const port = await FreePort()
 
-    app.listen(port, env.IP_USER_SERVICE)
+    app.listen(port, env.IP_FINANCIAL)
 
     const interfaces : NodeJS.Dict<NetworkInterfaceInfo[]> = os.networkInterfaces();
     for (const k in interfaces) {

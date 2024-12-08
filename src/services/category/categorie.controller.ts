@@ -8,9 +8,7 @@ export const GetCategoryById = catchSync(async (req : any) => {
   let { id } = req.params ?? 0
 
   if(!isValidMongooseId(id)) throw new ResponseException("Invalide id").BadRequest();
-
   let categorie = await CategorieSchema.findById(id)
-
   if(!categorie) throw new ResponseException("Aucune catégorie trouvée").NotFound()
 
   /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
@@ -83,6 +81,7 @@ export const CreateCategory = catchSync(async (req : any) => {
 export const UpdateCategory = catchSync(async (req : any) => {
   let { nom, color, id } = req.body ?? 0;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalide ID de catégorie").BadRequest()
   let categorie = await CategorieSchema.findById(id);
   if(!categorie) throw new ResponseException("L'identifiant est invalide").NotFound();
 
@@ -122,10 +121,11 @@ export const UpdateCategory = catchSync(async (req : any) => {
 export const DeleteCategory = catchSync(async (req : any) => {
   let { id } = req.body;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid ID categorie").BadRequest()
   let categorie = await CategorieSchema.findById(id)
   if(!categorie) throw new ResponseException("Aucune catégorie trouvée").NotFound();
 
-  if(req.userID !== categorie.auth || !req.isValidToken) throw new ResponseException("Vous n'avez pas l'autorisation de modifier cette information");
+  if(req.userID !== categorie.auth || !req.isValidToken) throw new ResponseException("Vous n'avez pas l'autorisation de modifier cette information").Forbidden();
 
   await categorie.deleteOne();
 

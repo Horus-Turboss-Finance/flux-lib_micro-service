@@ -9,6 +9,7 @@ let { mongooseMessageErrorFormator, isValidMongooseId, dateCheck, intCheck } = u
 export const GetTransactionById = catchSync(async (req : any) => {
   let { id } = req.params ?? 0
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid transaction ID").BadRequest()
   let transaction = await TransactionSchema.findById(id)
   if(!transaction) throw new ResponseException("Aucune transaction trouvée").NotFound()
 
@@ -42,8 +43,9 @@ export const GetAllUserTransaction = catchSync(async (req : any) => {
 export const GetTransactionByDate = catchSync(async (req : any) => {
   let { month, year } = req.params ?? 0;
 
-  if(!month || !year) month = new Date().getMonth(), year = new Date().getFullYear()
+  if(!month || !year) month = new Date().getMonth(), year = new Date().getFullYear();
 
+  month = Math.floor(month), year = Math.floor(year);
   if(!intCheck(month) || !intCheck(year)) throw new ResponseException("Le mois et l'année sont des nombres").BadRequest()
 
   let dateStart = new Date(year, month).getTime()
@@ -52,8 +54,8 @@ export const GetTransactionByDate = catchSync(async (req : any) => {
   let transactions = await TransactionSchema.find({
     $and : [
       {auth : req.userID},
-      {date : { $lte : dateStart}},
-      {date : { $gt : dateEnd}}
+      {date : { $gt : dateStart}},
+      {date : { $lte : dateEnd}}
     ]
   });
 
@@ -80,8 +82,7 @@ export const CreateTransaction = catchSync(async (req : any) => {
   if(date && dateCheck(date)) date = new Date(date).getTime();
 
   try{
-    let transaction = new TransactionSchema({
-      liedTransactions : liedTransactionsID,
+    let save : any = {
       categorie : categorieID,
       typeTransaction : type,
       wallet : walletID,
@@ -90,10 +91,11 @@ export const CreateTransaction = catchSync(async (req : any) => {
       montant,
       devise,
       date,
-    })
+    }
 
-    let err = transaction.validateSync();
-    if(err) throw err;
+    if(type == 4) save.liedTransactions = liedTransactionsID;
+    
+    let transaction = new TransactionSchema(save)
 
     let WalletData = await resultWallet;
     let CategorieData = await resultCategorie;
@@ -105,6 +107,11 @@ export const CreateTransaction = catchSync(async (req : any) => {
 
     /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
     if(!req.isValidToken || (walletID && WalletData && WalletData.auth  !== req.userID) || (categorieID && CategorieData && CategorieData.auth  !== req.userID) || (liedTransactionsID && TransactionData && TransactionData.auth  !== req.userID)) throw new ResponseException("Vous n'avez pas l'autorisation d'enregistrer cette information").Forbidden();
+
+    if(CategorieData && CategorieData.typeCategorie != type) throw new ResponseException("Vous ne pouvez enregistrer une transaction sur une catégorie avec un autre type").BadRequest()
+
+    let err = transaction.validateSync();
+    if(err) throw err;
 
     await transaction.save()
 
@@ -161,17 +168,16 @@ export const CreateTransaction = catchSync(async (req : any) => {
 })
 
 export const UpdateTransaction = catchSync(async (req : any) => {
-  let { montant, date, commentaire, devise, categorieID, liedTransactionsID, walletID, id } = req.body ?? 0;
+  let { montant, date, commentaire, devise, categorieID, walletID, id } = req.body ?? 0;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid transaction ID").BadRequest()
   let transactionBrut = TransactionSchema.findById(id);
 
   if(walletID && !isValidMongooseId(walletID)) throw new ResponseException("L'id du compte n'est pas valide").BadRequest();
   if(categorieID && !isValidMongooseId(categorieID)) throw new ResponseException("L'id de la catégorie n'est pas valide").BadRequest();
-  if(liedTransactionsID && !isValidMongooseId(liedTransactionsID)) throw new ResponseException("L'id de la transaction n'est pas valide").BadRequest();
 
   let resultWallet = WalletSchema.findById(walletID)
   let resultCategorie = CategorieSchema.findById(categorieID)
-  let resultTransaction = TransactionSchema.findById(liedTransactionsID)
 
   if(date && dateCheck(date)) date = new Date(date).getTime();
 
@@ -179,7 +185,6 @@ export const UpdateTransaction = catchSync(async (req : any) => {
     let transaction = await transactionBrut;
     if(!transaction) throw new ResponseException("L'identifiant est invalide").NotFound();
 
-    if(liedTransactionsID) transaction.liedTransactions = liedTransactionsID;
     if(commentaire) transaction.commentaire = commentaire;
     if(categorieID) transaction.categorie = categorieID;
     if(walletID) transaction.wallet = walletID;
@@ -187,19 +192,19 @@ export const UpdateTransaction = catchSync(async (req : any) => {
     if(devise) transaction.devise = devise;
     if(date) transaction.date = date;
     
+
     let err = transaction.validateSync();
     if(err) throw err;
 
     let WalletData = await resultWallet;
     let CategorieData = await resultCategorie;
-    let TransactionData = await resultTransaction;
 
+    if(CategorieData && CategorieData.typeCategorie != transaction.typeTransaction) throw new ResponseException("Vous ne pouvez enregistrer une transaction sur une catégorie avec un autre type").BadRequest()
     if(categorieID && !CategorieData) throw new ResponseException("La catégorie indiquée n'éxiste pas").NotFound();
-    if(liedTransactionsID && !TransactionData) throw new ResponseException("La transaction indiquée n'éxiste pas").NotFound();
     if(walletID && !WalletData) throw new ResponseException("Le compte indiqué n'éxiste pas").NotFound();
 
     /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
-    if(!req.isValidToken || (walletID && WalletData && WalletData.auth  !== req.userID) || (categorieID && CategorieData && CategorieData.auth  !== req.userID) || (liedTransactionsID && TransactionData && TransactionData.auth  !== req.userID)) throw new ResponseException("Vous n'avez pas l'autorisation d'enregistrer cette information").Forbidden();
+    if(!req.isValidToken || (walletID && WalletData && WalletData.auth  !== req.userID) || (categorieID && CategorieData && CategorieData.auth  !== req.userID)) throw new ResponseException("Vous n'avez pas l'autorisation d'enregistrer cette information").Forbidden();
 
     await transaction.save()
 
@@ -208,11 +213,6 @@ export const UpdateTransaction = catchSync(async (req : any) => {
   }catch(e : any){
     if(!e.name || e.name !== "ValidationError") throw e;
       
-    if(e.errors.liedTransactions){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.liedTransactions.message, e.errors.liedTransactions.value, "Lied transaction ID", "ID"))
-      .BadRequest();
-    }
-
     if(e.errors.categorie){
       throw new ResponseException(mongooseMessageErrorFormator(e.errors.categorie.message, e.errors.categorie.value, "Categorie ID", "ID"))
       .BadRequest();
@@ -248,6 +248,7 @@ export const UpdateTransaction = catchSync(async (req : any) => {
 export const DeleteTransaction = catchSync(async (req : any) => {
   let { id } = req.body;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid transaction ID").BadRequest()
   let transaction = await TransactionSchema.findById(id);
   if(!transaction) throw new ResponseException("Aucune transaction trouvée").NotFound();
 

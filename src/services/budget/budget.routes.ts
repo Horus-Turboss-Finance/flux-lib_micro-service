@@ -17,25 +17,19 @@ router.use(controleOrigine);
 router.use(LogRequest);
 router.use(isAuth);
 
-const budgetRoute = express.Router();
-router.use('/', budgetRoute);
-
-budgetRoute.route('/')
+router.route('/')
 .put(UpdateBudget)
 .post(CreateBudget)
 .delete(DeleteBudget);
 
-budgetRoute.route("/find/all")
+router.route("/find/all")
 .get(GetAllUserBudget);
-budgetRoute.route("/find/id/:id")
+router.route("/find/id/:id")
 .get(GetBudgetById);
-budgetRoute.route("/find/date/:year/:month")
+router.route("/find/date/:year/:month")
 .get(GetBudgetByDate);
 
-const TransactionBudgetRoute = express.Router();
-router.use('/transaction', TransactionBudgetRoute);
-
-TransactionBudgetRoute.route('/')
+router.route('/transaction')
 .post(CreateTransactionBudget);
 
 export let BudgetRouter = router;

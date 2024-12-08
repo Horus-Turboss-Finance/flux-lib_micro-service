@@ -3,11 +3,12 @@ import { ObjectifSchema } from "./objectifs.models";
 import { WalletSchema } from "../wallet/wallet.model";
 
 let { catchSync } = middleware;
-let { mongooseMessageErrorFormator, isValidMongooseId, dateCheck } = utils;
+let { mongooseMessageErrorFormator, isValidMongooseId, dateCheck, isValidJSON } = utils;
 
 export const GetObjectifById = catchSync(async (req : any) => {
   let { id } = req.params ?? 0
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid ID objectif").BadRequest()
   let objectif = await ObjectifSchema.findById(id)
   if(!objectif) throw new ResponseException("Aucun objectif trouvé").NotFound()
 
@@ -35,14 +36,14 @@ export const GetAllUserObjectif = catchSync(async (req : any) => {
 export const CreateObjectif = catchSync(async (req : any) => {
   let { idParent, devise, montant, start, end, type, wallet, title } = req.body ?? 0;
 
-  if(!isValidMongooseId(idParent)) throw new ResponseException("L'id de l'objectif n'est pas valide").BadRequest();
-  if(!isValidMongooseId(wallet)) throw new ResponseException("L'id du compte n'est pas valide").BadRequest();
+  if(idParent && !isValidMongooseId(idParent)) throw new ResponseException("L'id de l'objectif n'est pas valide").BadRequest();
+  if(wallet && !isValidMongooseId(wallet)) throw new ResponseException("L'id du compte n'est pas valide").BadRequest();
 
   let resultWallet = WalletSchema.findById(wallet)
   let resultObjectif = ObjectifSchema.findById(idParent)
-
+  
   if(start && dateCheck(start)) start = new Date(start).getTime();
-  if(end && dateCheck(start)) end = new Date(start).getTime();
+  if(end && dateCheck(end)) end = new Date(end).getTime();
 
   if(start >= end || !end) throw new ResponseException("La date de fin ne peut être inférieur à la date de début et doit être spécifié").BadRequest();
 
@@ -65,11 +66,9 @@ export const CreateObjectif = catchSync(async (req : any) => {
     let WalletData = await resultWallet;
     let ObjectifData = await resultObjectif;
 
-    if(!ObjectifData) throw new ResponseException("L'objectif n'éxiste pas").NotFound();
-    if(!WalletData) throw new ResponseException("Le compte n'éxiste pas").NotFound();
+    if(!ObjectifData && idParent) throw new ResponseException("L'objectif n'éxiste pas").NotFound();
+    if(!WalletData && wallet) throw new ResponseException("Le compte n'éxiste pas").NotFound();
 
-    /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
-    if(!req.isValidToken || req.userID !== WalletData.auth || ObjectifData.auth !== req.userID) throw new ResponseException("Vous n'avez pas l'autorisation d'enregistrer cette information").Forbidden();
 
     await objectif.save()
 
@@ -128,6 +127,7 @@ export const CreateObjectif = catchSync(async (req : any) => {
 export const UpdateObjectif = catchSync(async (req : any) => {
   let { montant, end, finish, title, id } = req.body ?? 0;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid ID objectif").BadRequest()
   let objectifBrut = ObjectifSchema.findById(id);
 
   try{
@@ -172,16 +172,18 @@ export const UpdateObjectif = catchSync(async (req : any) => {
 export const UpdateObjectifsWallet = catchSync(async (req : any) => {
   let {id, wallet} = req.body;
   if(!wallet) throw new ResponseException("Il n'y a rien à modifier").BadRequest();
-
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid ID compte financier").BadRequest()
   let objectifBrut = ObjectifSchema.findById(id);
 
-  if(wallet[0]) {
-    wallet.map(async (w : any) => {
+  if(isValidJSON(wallet) && JSON.parse(wallet)[0]) {
+    JSON.parse(wallet).map(async (w : any) => {
+      if(!isValidMongooseId(w)) throw new ResponseException("Invalid ID compte financier").BadRequest()
       let agent = await WalletSchema.findById(w)
 
       if(!agent || req.userID !== agent.auth) throw new ResponseException("Vous n'avez pas l'autorisation de modifier cette information").Forbidden();
     })
   }else{
+    if(!isValidMongooseId(wallet)) throw new ResponseException("Invalid ID compte financier").BadRequest()
     let agent = await WalletSchema.findById(wallet)
 
     if(!agent || req.userID !== agent.auth) throw new ResponseException("Vous n'avez pas l'autorisation de modifier cette information").Forbidden();
@@ -191,8 +193,9 @@ export const UpdateObjectifsWallet = catchSync(async (req : any) => {
     let objectif = await objectifBrut;
     if(!objectif) throw new ResponseException("L'identifiant est invalide").NotFound();
 
-    if(!wallet[0]) wallet = [wallet]
-    if(wallet) objectif.wallet = wallet;
+    if(!wallet[0]) wallet = `[${wallet}]`;
+    if(wallet && !isValidJSON(wallet)) throw new ResponseException("L'array wallet est invalide").BadRequest();
+    if(wallet) objectif.wallet = JSON.parse(wallet);
 
     let err = objectif.validateSync();
     if(err) throw err;
@@ -216,10 +219,11 @@ export const UpdateObjectifsWallet = catchSync(async (req : any) => {
 export const DeleteObjectif = catchSync(async (req : any) => {
   let { id } = req.body;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid ID objectif").BadRequest()
   let objectif = await ObjectifSchema.findById(id);
   if(!objectif) throw new ResponseException("Aucun objectif trouvée").NotFound();
 
-  if(req.userID !== objectif.auth || !req.isValidToken) throw new ResponseException("Vous n'avez pas l'autorisation de modifier cette information");
+  if(req.userID !== objectif.auth || !req.isValidToken) throw new ResponseException("Vous n'avez pas l'autorisation de modifier cette information").Forbidden();
 
   await objectif.deleteOne();
 

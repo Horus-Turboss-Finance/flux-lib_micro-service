@@ -40,7 +40,7 @@ const objectifSchema = new Schema({
   title : {
     type : String,
     validate : {
-      validator : (strings : any) => utils.stringContraint(strings, 0, 50),
+      validator : (strings : any) => utils.stringContraint(strings, 0, 51),
       message : "Le titre ne peut dépasser 50 caractère"
     }
   },
@@ -48,7 +48,7 @@ const objectifSchema = new Schema({
     type : Number,
     required : [true, "Le type de compte est requis."],
     validate : {
-      validator : (number : any) => utils.intContraint(number, 0, 9),
+      validator : (number : any) => utils.intContraint(number, 0, 10),
       message : "Le type de compte doit être compris entre 1 et 9"
     }
   },
@@ -61,7 +61,7 @@ const objectifSchema = new Schema({
   ],
   auth : {
     type : String,
-    required : [true, "L'identifiant utilisateur est necessaire"],
+    required : [true, "Connexion nécessaire"],
     validate : {
       validator : (string :any) => {
         return utils.isValidMongooseId(string)

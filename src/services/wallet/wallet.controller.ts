@@ -7,6 +7,7 @@ let { mongooseMessageErrorFormator, isValidMongooseId, intCheck } = utils;
 export const GetWalletById = catchSync(async (req : any) => {
   let { id } = req.params ?? 0
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid wallet ID").BadRequest()
   let wallet = await WalletSchema.findById(id)
   if(!wallet) throw new ResponseException("Aucun compte financier trouvé").NotFound()
 
@@ -31,7 +32,6 @@ export const GetAllUserWallet = catchSync(async (req : any) => {
   throw new ResponseException(Responses).Success()  
 })
 
-// IM HERE DONC TOUCH TODO
 export const CreateWallet = catchSync(async (req : any) => {
   let { tag, devise, montant, type } = req.body ?? 0;
 
@@ -48,11 +48,11 @@ export const CreateWallet = catchSync(async (req : any) => {
       tag,
     })
 
-    let err = wallet.validateSync();
-    if(err) throw err;
-
     /* req.userID & req.isValidToken sont des propriété enregistrée dans le middleware auth via un call async */
     if(!req.isValidToken || wallet.auth  !== req.userID) throw new ResponseException("Vous n'avez pas l'autorisation d'enregistrer cette information").Forbidden();
+
+    let err = wallet.validateSync();
+    if(err) throw err;
 
     await wallet.save()
 
@@ -66,34 +66,37 @@ export const CreateWallet = catchSync(async (req : any) => {
       .BadRequest();
     }
 
-    if(e.errors.devises){
-      /* A CORRIGER DANS LES TESTS */
-      console.log(e.errors.devises)
-      throw e     
+    if(e.errors["devises.0.montant"]){
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors["devises.0.montant"].message, e.errors["devises.0.montant"].value, "Montant", "number")).BadRequest()
+    }
+
+    if(e.errors["devises.0.identifiant"]){
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors["devises.0.identifiant"].message, e.errors["devises.0.identifiant"].value, "Devise", "EUR|USD|GBP|CAD")).BadRequest()
     }
 
     if(e.errors.typeWallet){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.typeWallet.message, e.errors.typeWallet.value, "Type de compte financier", "ID"))
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors.typeWallet.message, e.errors.typeWallet.value, "Type de compte financier", "number"))
       .BadRequest();
     }
 
     if(e.errors.tag){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.tag.message, e.errors.tag.value, "Tag", "number"))
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors.tag.message, e.errors.tag.value, "Tag", "string"))
       .BadRequest();
     }
   }
 })
 
 export const UpdateWallet = catchSync(async (req : any) => {
-  let { devise, montant, tag, id } = req.body ?? 0;
+  let { devise, montant, tag, id } = req.body;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid wallet ID").BadRequest()
   let walletBrut = WalletSchema.findById(id);
   try{
     let wallet : any = await walletBrut;
     if(!wallet) throw new ResponseException("L'identifiant est invalide").NotFound();
 
     if((!devise || !montant) && !tag) throw new ResponseException("Aucunes information à modifier").BadRequest();
-    if(devise || !montant) throw new ResponseException("Le montant est nécessaire").BadRequest();
+    if(devise && !montant) throw new ResponseException("Le montant est nécessaire").BadRequest();
     else {
       if(!wallet.devises[0]) wallet.devises.push({
         identifiant : devise,
@@ -101,14 +104,18 @@ export const UpdateWallet = catchSync(async (req : any) => {
       })
       else {
         let index = wallet.devises.findIndex((e : any) => e.identifiant === devise)
-        if(index == -1) wallet.devises.push({
-          identifiant : devise,
-          montant
-        })
-        else wallet.devises[index] = {
-          identifiant : devise,
-          montant
-        };
+
+        if(index == -1) {
+          wallet.devises.push({
+            identifiant : devise,
+            montant
+          })
+        } else {
+          wallet.devises[index] = {
+            identifiant : devise,
+            montant
+          };
+        }
       }
     }
 
@@ -127,38 +134,21 @@ export const UpdateWallet = catchSync(async (req : any) => {
   }catch(e : any){
     if(!e.name || e.name !== "ValidationError") throw e;
       
-    if(e.errors.liedTransactions){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.liedTransactions.message, e.errors.liedTransactions.value, "Lied transaction ID", "ID"))
+    if(e.errors["devises.0.montant"]){
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors["devises.0.montant"].message, e.errors["devises.0.montant"].value, "Montant", "number")).BadRequest()
+    }
+
+    if(e.errors["devises.0.identifiant"]){
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors["devises.0.identifiant"].message, e.errors["devises.0.identifiant"].value, "Devise", "EUR|USD|GBP|CAD")).BadRequest()
+    }
+
+    if(e.errors.tag){
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors.tag.message, e.errors.tag.value, "Tag", "string"))
       .BadRequest();
     }
 
-    if(e.errors.categorie){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.categorie.message, e.errors.categorie.value, "Categorie ID", "ID"))
-      .BadRequest();
-    }
-
-    if(e.errors.wallet){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.wallet.message, e.errors.wallet.value, "Wallet ID", "ID"))
-      .BadRequest();
-    }
-
-    if(e.errors.commentaire){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.commentaire.message, e.errors.commentaire.value, "Commentaire", "string"))
-      .BadRequest();
-    }
-
-    if(e.errors.montant){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.montant.message, e.errors.montant.value, "Montant", "number"))
-      .BadRequest();
-    }
-
-    if(e.errors.devise){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.devise.message, e.errors.devise.value, "Devise", "EUR|USD|GBP|CAD"))
-      .BadRequest();
-    }
-
-    if(e.errors.date){
-      throw new ResponseException(mongooseMessageErrorFormator(e.errors.date.message, e.errors.date.value, "Date", "date"))
+    if(e.errors.typeWallet){
+      throw new ResponseException(mongooseMessageErrorFormator(e.errors.typeWallet.message, e.errors.typeWallet.value, "Type", "number"))
       .BadRequest();
     }
   }
@@ -167,6 +157,7 @@ export const UpdateWallet = catchSync(async (req : any) => {
 export const DeleteWallet = catchSync(async (req : any) => {
   let { id } = req.body;
 
+  if(!isValidMongooseId(id)) throw new ResponseException("Invalid wallet ID").BadRequest()
   let wallet = await WalletSchema.findById(id);
   if(!wallet) throw new ResponseException("Aucun compte financier trouvée").NotFound();
 
@@ -179,6 +170,14 @@ export const DeleteWallet = catchSync(async (req : any) => {
 
 const WalletNormalizer = (ObjectifData : any) => {
   let { typeWallet, devises, tag, _id } = ObjectifData
+
+  devises = devises.map((u : any) => {
+    return {
+      devise : u.identifiant,
+      montant : u.montant,
+      id : u._id
+    }
+  })
 
   return {
     type : typeWallet,

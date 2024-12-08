@@ -20,7 +20,7 @@ const transactionSchema = new Schema({
     type : Number,
     required : [true, "Le type de transaction est nécessaire"],
     validate : {
-      validator : (number : any) => utils.intContraint(number, 1, 4),
+      validator : (number : any) => utils.intContraint(number, 0, 5),
       message : 'Le type ne peux être inférieur à 1 et supérieur à 4'
     }
   },
@@ -28,7 +28,7 @@ const transactionSchema = new Schema({
     type : String,
     validate : {
       validator : (string : any) => {
-        return utils.stringContraint(string, 0, 250);
+        return utils.stringContraint(string, 0, 251);
       },
       message : "Le commentaire ne peut faire plus de 250 caractères."
     }
@@ -57,7 +57,7 @@ const transactionSchema = new Schema({
   },
   auth : {
     type : String,
-    required : [true, "L'identifiant utilisateur est necessaire"],
+    required : [true, "Connexion nécessaire"],
     validate : {
       validator : (string :any) => utils.isValidMongooseId(string),
       message : "Le format de l'identifiant est invalide"
