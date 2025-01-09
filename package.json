@@ -1,7 +1,7 @@
 {
   "name": "flux-lib_micro-service",
   "version": "1.0.1",
-  "description": "Micro-service gérant l'aspect financier des utilisateurs de cash eyes",
+  "description": "Micro-service gérant l'aspect financier des utilisateurs de cash sight",
   "main": "/dist/index.js",
   "scripts": {
     "build": "tsc",

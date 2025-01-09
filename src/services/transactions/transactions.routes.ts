@@ -17,19 +17,16 @@ router.use(controleOrigine);
 router.use(LogRequest);
 router.use(isAuth);
 
-const TransactionRoute = express.Router();
-router.use('/', TransactionRoute);
-
-TransactionRoute.route('/')
+router.route('/')
 .put(UpdateTransaction)
 .post(CreateTransaction)
 .delete(DeleteTransaction);
 
-TransactionRoute.route("/find/all")
+router.route("/find/all")
 .get(GetAllUserTransaction);
-TransactionRoute.route("/find/id/:id")
+router.route("/find/id/:id")
 .get(GetTransactionById);
-TransactionRoute.route("/find/date/:year/:month")
+router.route("/find/date/:year/:month")
 .get(GetTransactionByDate);
 
 export let TransactionRouter = router;

@@ -234,8 +234,8 @@ const ObjectifNormalizer = (ObjectifData : any) => {
   let { idParent, identifiantDevise, montantDevise, dateStart, dateEnd, typeObjectif, wallet, title, finish, _id } = ObjectifData
 
   return {
-    startDate : new Timepiece("fr", dateStart).longDateTime(),
-    endDate : new Timepiece("fr", dateEnd).longDateTime(),
+    startDate : new Timepiece(dateStart).longDateTime(),
+    endDate : new Timepiece(dateEnd).longDateTime(),
     devise : identifiantDevise, 
     montant : montantDevise,
     startTime : dateStart,

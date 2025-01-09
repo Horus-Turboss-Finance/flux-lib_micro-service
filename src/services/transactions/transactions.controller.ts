@@ -263,7 +263,7 @@ const TransactionNormalizer = (ObjectifData : any) => {
   let { montant, date, typeTransaction, commentaire, devise, categorie, wallet, liedTransactions, _id } = ObjectifData
 
   return {
-    dateDate : new Timepiece("fr", date).longDateTime(),
+    dateDate : new Timepiece(date).longDateTime(),
     liedTransactionsID : liedTransactions,
     categorieID : categorie,
     type : typeTransaction,

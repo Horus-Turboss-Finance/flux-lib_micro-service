@@ -1,7 +1,7 @@
 import {
   CreateTransactionBudget, 
   GetAllUserBudget, 
-  GetBudgetByDate, 
+  // GetBudgetByDate, 
   GetBudgetById, 
   CreateBudget,
   UpdateBudget,
@@ -26,8 +26,9 @@ router.route("/find/all")
 .get(GetAllUserBudget);
 router.route("/find/id/:id")
 .get(GetBudgetById);
-router.route("/find/date/:year/:month")
-.get(GetBudgetByDate);
+// SUPPRIME DEPUIS LA MODIFICATION DE LA DATE DU BUDGET MODELS VERS LES BUDGETS TRANSACTIONS MODELS
+// router.route("/find/date/:year/:month")
+// .get(GetBudgetByDate);
 
 router.route('/transaction')
 .post(CreateTransactionBudget);
