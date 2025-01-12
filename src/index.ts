@@ -39,7 +39,7 @@ const main = async () => {
           /*
             CALL ADRESS MANAGER 
           */
-          SignalAdressManager({adressIP : address.address, port, service : serviceName.object.utilisateur}, env)
+          SignalAdressManager({adressIP : address.address, port, service : serviceName.object.flux}, env)
         }
       }
     }
