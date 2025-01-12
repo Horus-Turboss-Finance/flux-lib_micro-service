@@ -22,27 +22,14 @@ const main = async () => {
   try{
     const port = await FreePort()
 
-    app.listen(port, env.IP_FINANCIAL)
+    app.listen(port, env.IP_FINANCIAL, ()=> {
+      console.log("flux service listening on port : " + port)
+    })
 
-    const interfaces : NodeJS.Dict<NetworkInterfaceInfo[]> = os.networkInterfaces();
-    for (const k in interfaces) {
-      for (const k2 in interfaces[k]) {
-        /* @ts-ignore */
-        const address = interfaces[k][k2];
-  
-        if (address.family === 'IPv4') {
-          /* Log in file and terminal */
-          logSys.ServiceInfo(inAppServiceName.app, `${address.address}:${port}`);
-
-          console.log(`Connect Url : ${address.address}:${port}`)
-
-          /*
-            CALL ADRESS MANAGER 
-          */
-          SignalAdressManager({adressIP : address.address, port, service : serviceName.object.flux}, env)
-        }
-      }
-    }
+    /*
+      CALL ADRESS MANAGER 
+    */
+    SignalAdressManager({adressIP : env.MACHINE_IP, port, service : serviceName.object.flux}, env)
   }catch(e : any){
     logSys.UnknowAppError(inAppServiceName.index, e)
   }
