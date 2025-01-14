@@ -1,6 +1,5 @@
 import app from './app';
 import { params, utils, servicesConnexion } from "packages"
-import os, { NetworkInterfaceInfo } from "os";
 
 const { SignalAdressManager } = servicesConnexion;
 const { inAppServiceName, serviceName } = params;
@@ -23,7 +22,7 @@ const main = async () => {
     const port = await FreePort()
 
     app.listen(port, env.IP_FINANCIAL, ()=> {
-      console.log("flux service listening on port : " + port)
+      console.log("flux service listening on : " + env.IP_FINANCIAL + ':' + port)
     })
 
     /*
