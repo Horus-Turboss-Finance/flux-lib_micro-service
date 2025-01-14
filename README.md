@@ -179,6 +179,10 @@
 
 ```shell
 npm install
+
+cd ./src
+mkdir log
+../
 ```
 
 **2. Créer les fichiers de configuration**
