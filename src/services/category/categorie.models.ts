@@ -20,7 +20,7 @@ const categorieSchema = new Schema({
   },
   color : {
     type : String,
-    default : "#ffffff",
+    default : "#000000",
     validate : {
       validator : (strings : any) => utils.IsHexColor(strings),
       message : "La couleur doit être sous format hexadécimal (avec le #)"

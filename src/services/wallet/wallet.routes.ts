@@ -16,17 +16,14 @@ router.use(controleOrigine);
 router.use(LogRequest);
 router.use(isAuth);
 
-const WalletRoute = express.Router();
-router.use('/', WalletRoute);
-
-WalletRoute.route('/')
+router.route('/')
 .put(UpdateWallet)
 .post(CreateWallet)
 .delete(DeleteWallet);
 
-WalletRoute.route("/find/all")
+router.route("/find/all")
 .get(GetAllUserWallet);
-WalletRoute.route("/find/id/:id")
+router.route("/find/id/:id")
 .get(GetWalletById);
 
 export let WalletRouter = router;
