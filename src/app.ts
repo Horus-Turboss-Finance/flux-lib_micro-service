@@ -9,7 +9,7 @@ import express from "express";
 import path from "path";
 
 /* ROUTING */
-import './services/routines/addmontlybudget'
+import './services/routines/addmontlybudget';
 
 const app = express();
 

@@ -46,10 +46,10 @@ const objectifSchema = new Schema({
   },
   typeObjectif : {
     type : Number,
-    required : [true, "Le type de compte est requis."],
+    required : [true, "Le type de l'objectif est requis."],
     validate : {
       validator : (number : any) => utils.intContraint(number, 0, 10),
-      message : "Le type de compte doit être compris entre 1 et 9"
+      message : "Le type de l'objectif doit être compris entre 1 et 9"
     }
   },
   wallet : [

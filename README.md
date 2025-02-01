@@ -50,6 +50,7 @@
     - [Create categorie](#create-categorie)
       - [URL](#url-6)
       - [Request Parameters :](#request-parameters--4)
+      - [Type params :](#type-params-)
       - [*Exemple de requête*](#exemple-de-requête-6)
       - [Response Parameters :](#response-parameters--6)
       - [*Exemple de réponse*](#exemple-de-réponse-6)
@@ -79,6 +80,7 @@
     - [Create objectif](#create-objectif)
       - [URL](#url-11)
       - [Request Parameters :](#request-parameters--7)
+      - [Type params :](#type-params--1)
       - [*Exemple de requête*](#exemple-de-requête-11)
       - [Response Parameters :](#response-parameters--11)
       - [*Exemple de réponse*](#exemple-de-réponse-11)
@@ -114,6 +116,7 @@
     - [Ajout d'une transaction](#ajout-dune-transaction)
       - [URL](#url-17)
       - [Request Parameters :](#request-parameters--11)
+      - [Type params :](#type-params--2)
       - [*Exemple de requête*](#exemple-de-requête-17)
       - [Response Parameters :](#response-parameters--17)
       - [*Exemple de réponse*](#exemple-de-réponse-17)
@@ -144,11 +147,43 @@
       - [*Exemple de requête*](#exemple-de-requête-22)
       - [Response Parameters :](#response-parameters--22)
       - [*Exemple de réponse*](#exemple-de-réponse-22)
-  - [Ping](#ping)
+  - [Wallet](#wallet)
+    - [Create Wallet](#create-wallet)
       - [URL](#url-23)
+      - [Request Parameters :](#request-parameters--14)
+      - [Type params :](#type-params--3)
       - [*Exemple de requête*](#exemple-de-requête-23)
       - [Response Parameters :](#response-parameters--23)
       - [*Exemple de réponse*](#exemple-de-réponse-23)
+    - [Update Wallet](#update-wallet)
+      - [URL](#url-24)
+      - [Request Parameters :](#request-parameters--15)
+      - [*Exemple de requête*](#exemple-de-requête-24)
+      - [Response Parameters :](#response-parameters--24)
+      - [*Exemple de réponse*](#exemple-de-réponse-24)
+    - [Delete Wallet](#delete-wallet)
+      - [URL](#url-25)
+      - [Request Parameters :](#request-parameters--16)
+      - [*Exemple de requête*](#exemple-de-requête-25)
+      - [Response Parameters :](#response-parameters--25)
+      - [*Exemple de réponse*](#exemple-de-réponse-25)
+    - [Find all user Wallet](#find-all-user-wallet)
+      - [URL](#url-26)
+      - [Request Parameters :](#request-parameters--17)
+      - [*Exemple de requête*](#exemple-de-requête-26)
+      - [Response Parameters :](#response-parameters--26)
+      - [*Exemple de réponse*](#exemple-de-réponse-26)
+    - [Find Wallet By Id](#find-wallet-by-id)
+      - [URL](#url-27)
+      - [Request Parameters :](#request-parameters--18)
+      - [*Exemple de requête*](#exemple-de-requête-27)
+      - [Response Parameters :](#response-parameters--27)
+      - [*Exemple de réponse*](#exemple-de-réponse-27)
+  - [Ping](#ping)
+      - [URL](#url-28)
+      - [*Exemple de requête*](#exemple-de-requête-28)
+      - [Response Parameters :](#response-parameters--28)
+      - [*Exemple de réponse*](#exemple-de-réponse-28)
 - [About :](#about-)
 
 
@@ -515,6 +550,16 @@ POST /categorie
 | `color` | `String` | La couleur souhaité |
 | `type` | `Number` | Le type de catégorie dépense, revenu, transfère (bientôt achat et vente) |
 
+##### Type params : 
+| Parameter | Value | Remarques |
+| :--- | :---: | :--- |
+| `Dépenses` | `1` |
+| `Revenu` | `2` |
+| `Transfère Entrant` | `3` |
+| `Transfère Sortant` | `4` |
+| `Achat` | `5` | L'achat à la différence des dépenses étant une dépense entre une valeur financière (action, crypto, bien, etc) contre de l'argent et non un échange de bien ou de service de consommation |
+| `Vente` | `6` | La vente à la différence des revenu étant une recette entre une valeur financière (action, crypto, bien, etc) contre de l'argent et non un échange de pour un travail fournit ou un quelconque intérêt de livret |
+
 ##### *Exemple de requête*
 ```js
     let axios = require('axios')
@@ -737,6 +782,16 @@ POST /objectif
 | `start` | `Number` | Le date de début de l'objectif |
 | `end` | `Number` | La date de fin de l'objectif |
 | `type` | `Number` | Le type d'objectif |
+
+##### Type params : 
+| Parameter | Value |
+| :--- | :---: |
+| `Achat de maison` | `1` |
+| `Remboursement de dette` | `2` |
+| `Achat de voiture` | `3` |
+| `Planification de retraite` | `4` |
+| `Planification de vacances` | `5` |
+| `Autre` | `6` |
 
 ##### *Exemple de requête*
 ```js
@@ -1011,6 +1066,16 @@ POST /transaction
 | `date` | `Number` | Le date de la transaction |
 | `type` | `Number` | Le type de transaction (dépense, revenu, transfère) |
 
+##### Type params : 
+| Parameter | Value | Remarques |
+| :--- | :---: | :--- |
+| `Dépenses` | `1` |
+| `Revenu` | `2` |
+| `Transfère Entrant` | `3` |
+| `Transfère Sortant` | `4` |
+| `Achat` | `5` | L'achat à la différence des dépenses étant une dépense entre une valeur financière (action, crypto, bien, etc) contre de l'argent et non un échange de bien ou de service de consommation |
+| `Vente` | `6` | La vente à la différence des revenu étant une recette entre une valeur financière (action, crypto, bien, etc) contre de l'argent et non un échange de pour un travail fournit ou un quelconque intérêt de livret |
+
 ##### *Exemple de requête*
 ```js
     let axios = require('axios')
@@ -1261,6 +1326,258 @@ GET /transaction/find/date/:year/:month
   success : true,
   status : 200,
   data : '[{"dateDate":"Dimanche 28 avril 2024 14:04","liedTransactionsID":null,"categorieID":"asasasasasasasasasasasasasasa","type":2,"walletID":"aezfsdzasd12azs","datetime":123456789123145,"commentaire":"vacance bob","id":"aezfsdzasd12azs","devise":"EUR","montant":123456789123145}]'
+}
+```
+
+### Wallet
+#### Create Wallet
+##### URL
+```http
+POST /wallet
+```
+
+##### Request Parameters :
+| Parameter  | Type     |
+| :--------- | :------: | 
+| `montant`  | `Number` |
+| `devise`   | `String` |
+| `token`    | `String` |
+| `type`     | `Number` |
+| `tag`      | `String` |
+
+##### Type params : 
+| Parameter | Value |
+| :--- | :---: |
+| `Courant` | `1` |
+| `Espèce` | `2` |
+| `Livret` | `3` |
+| `Investissement` | `4` |
+| `Crédit` | `5` |
+| `Assurance` | `6` |
+| `Retraite` | `7` |
+| `Autre` | `8` |
+
+##### *Exemple de requête*
+```js
+    let axios = require('axios')
+    // ...Code existant...//
+    axios.request({
+      url: `/wallet`,
+      method: 'POST',
+      body: {
+        trust : process.env.PASSWORD_SERVICE,
+        type : typeWallet[input.type],
+        token : sessionStorage.token,
+        tag: tagWallet[input.type],
+        montant : input.montant,
+        devise : "EUR",
+      },
+    })
+    .then(res => res.json())
+    .then(json => ...)
+```
+
+##### Response Parameters :
+| Parameter | Type | Description |
+| :-------- | :--: | :---------- |
+| `success` | `Boolean` | Validation si la requête s'est terminé sans problème où inversement |
+| `status` | `Interger` | Le code http de la réponse |
+| `data` | `User` | Result de la requête |
+
+##### *Exemple de réponse*
+```js
+{
+  success : true,
+  status : 200,
+  data : '[{"type":1,"id":"aezfsdzasd12azs","devises":{"devise":"EUR","montant":500,"id":"oizejzmzicb"},"montant":123456789123145,"tag":"investissement"}]'
+}
+```
+
+#### Update Wallet
+##### URL
+```http
+PUT /wallet
+```
+
+##### Request Parameters :
+| Parameter  | Type     |
+| :--------- | :------: | 
+| `montant`  | `Number` |
+| `devise`   | `String` |
+| `token`    | `String` |
+| `tag`      | `String` |
+| `id`       | `String` |
+
+##### *Exemple de requête*
+```js
+    let axios = require('axios')
+    // ...Code existant...//
+    axios.request({
+      url: `/wallet`,
+      method: 'PUT',
+      body: {
+        trust : process.env.PASSWORD_SERVICE,
+        token : sessionStorage.token,
+        tag: tagWallet[input.type],
+        montant : input.montant,
+        devise : "EUR",
+        id : input.id,
+      },
+    })
+    .then(res => res.json())
+    .then(json => ...)
+```
+
+
+##### Response Parameters :
+| Parameter | Type | Description |
+| :-------- | :--: | :---------- |
+| `success` | `Boolean` | Validation si la requête s'est terminé sans problème où inversement |
+| `status` | `Interger` | Le code http de la réponse |
+| `data` | `User` | Result de la requête |
+
+
+##### *Exemple de réponse*
+```js
+{
+  success : true,
+  status : 200,
+  data : '[{"type":1,"id":"aezfsdzasd12azs","devises":{"devise":"EUR","montant":500,"id":"oizejzmzicb"},"montant":123456789123145,"tag":"investissement"}]'
+}
+```
+
+
+#### Delete Wallet
+##### URL
+```http
+DELETE /wallet
+```
+
+
+##### Request Parameters :
+| Parameter  | Type     |
+| :--------- | :------: | 
+| `token`    | `String` |
+| `id`       | `String` |
+
+
+##### *Exemple de requête*
+```js
+    let axios = require('axios')
+    // ...Code existant...//
+    axios.request({
+      url: `/wallet`,
+      method: 'DELETE',
+      body: {
+        trust : process.env.PASSWORD_SERVICE,
+        token : sessionStorage.token,
+        id : input.id,
+      },
+    })
+    .then(res => res.json())
+    .then(json => ...)
+```
+
+
+##### Response Parameters :
+| Parameter | Type | Description |
+| :-------- | :--: | :---------- |
+| `success` | `Boolean` | Validation si la requête s'est terminé sans problème où inversement |
+| `status` | `Interger` | Le code http de la réponse |
+| `data` | `User` | Result de la requête |
+
+##### *Exemple de réponse*
+```js
+{
+  success : true,
+  status : 200,
+  data : "Compte supprimé"
+}
+```
+
+#### Find all user Wallet
+##### URL
+```http
+GET /wallet/find/all
+```
+
+##### Request Parameters :
+| Parameter  | Type     |
+| :--------- | :------: | 
+| `token`    | `String` |
+
+##### *Exemple de requête*
+```js
+    let axios = require('axios')
+    // ...Code existant...//
+    axios.request({
+      url: `/wallet/find/all`,
+      method: 'GET',
+      header: {
+        trust : process.env.PASSWORD_SERVICE,
+        token : sessionStorage.token,
+      },
+    })
+    .then(res => res.json())
+    .then(json => ...)
+```
+
+##### Response Parameters :
+| Parameter | Type | Description |
+| :-------- | :--: | :---------- |
+| `success` | `Boolean` | Validation si la requête s'est terminé sans problème où inversement |
+| `status` | `Interger` | Le code http de la réponse |
+| `data` | `User` | Result de la requête |
+
+##### *Exemple de réponse*
+```js
+{
+  success : true,
+  status : 200,
+  data : '[{"type":1,"id":"aezfsdzasd12azs","devises":{"devise":"EUR","montant":500,"id":"oizejzmzicb"},"montant":123456789123145,"tag":"investissement"}]'
+}
+```
+
+#### Find Wallet By Id
+##### URL
+```http
+GET /wallet/find/id/:id
+```
+
+##### Request Parameters :
+| Parameter  | Type     |
+| :--------- | :------: | 
+| `token`    | `String` |
+
+##### *Exemple de requête*
+```js
+    let axios = require('axios')
+    // ...Code existant...//
+    axios.request({
+      url: `/wallet/find/id/aezfsdzasd12azs`,
+      method: 'GET',
+      header: {
+        trust : process.env.PASSWORD_SERVICE,
+        token : sessionStorage.token,
+      },
+    })
+    .then(res => res.json())
+    .then(json => ...)
+```
+
+##### Response Parameters :
+| Parameter | Type | Description |
+| :-------- | :--: | :---------- |
+| `success` | `Boolean` | Validation si la requête s'est terminé sans problème où inversement |
+| `status` | `Interger` | Le code http de la réponse |
+| `data` | `User` | Result de la requête |
+
+##### *Exemple de réponse*
+```js
+{
+  success : true,
+  status : 200,
+  data : '[{"type":1,"id":"aezfsdzasd12azs","devises":{"devise":"EUR","montant":500,"id":"oizejzmzicb"},"montant":123456789123145,"tag":"investissement"}]'
 }
 ```
 
