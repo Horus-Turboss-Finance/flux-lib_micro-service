@@ -1,14 +1,7 @@
-import { utils, ResponseException } from "packages";
 import budgetModels from "../budget/budget.models";
 
-let { isValidMongooseId } = utils;
-
-/* POUR EVITER DENVOYER DEUX REQUÊTE DANS UN MOIS */
-let isAlreadyUsed = false;
-
 export const addMonthBudget = async () => {
-  if(new Date().getDate() != 1 && !isAlreadyUsed) {
-    isAlreadyUsed = false;
+  if(new Date().getDate() != 1) {
     return setTimeout(addMonthBudget, 24*60*60*1000);
   }
 
@@ -23,7 +16,6 @@ export const addMonthBudget = async () => {
     })
   }
 
-  isAlreadyUsed = true;
   return setTimeout(addMonthBudget, 24*60*60*1000)
 }
 

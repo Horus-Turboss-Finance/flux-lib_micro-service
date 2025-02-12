@@ -606,6 +606,7 @@ PUT /categorie
 | :------------ | :------: | :-------------------------------- |
 | `nom` | `String` | Le nom de la catégorie |
 | `color` | `String` | La couleur souhaité |
+| `id` | `String` | L'id de la catégorie à modifier |
 
 ##### *Exemple de requête*
 ```js
@@ -619,6 +620,7 @@ PUT /categorie
             token : sessionStorage.token,
             nom : input.nom,
             color : input.color,
+            id : input.id
         },
     })
     .then(res => res.json())
@@ -844,6 +846,7 @@ PUT /objectif
 | `title` | `string` | Le titre de l'objectif |
 | `montant` | `Number` | Le montant de l'objectif |
 | `end` | `Number` | La date de fin de l'objectif |
+| `id` | `String` | L'id de l'objectif à modifier |
 
 ##### *Exemple de requête*
 ```js
