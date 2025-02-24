@@ -79,18 +79,21 @@ export const CreateBudget = catchSync(async (req : any) => {
       montant,
       devise,
       history : [
-        montant,
+        {montant},
       ]
     })
 
     let err = budget.validateSync();
     if(err) throw err;
 
+    console.log("testValid")
     await budget.save()
 
     let Responses = JSON.stringify(BudgetNormalizer(budget))
+    console.log("responsed")
     throw new ResponseException(Responses).OK();
   }catch(e : any){
+    console.log(e)
     if(!e.name || (e.name !== "ValidationError" && e.name !== "MongoServerError")) throw e;
     
     if(e.name === 'MongoServerError' && e.code === 11000) {
